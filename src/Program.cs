@@ -1,4 +1,5 @@
 ﻿using MiniExcelLibs;
+using MiniExcelLibs.OpenXml;
 using UtfUnknown;
 
 namespace Replacement;
@@ -7,17 +8,41 @@ internal class Program
 {
     public static void Main(string[] args)
     {
-        Console.WriteLine("[INF] Welcome to Replacement.");
-        Console.WriteLine($"[INF] Usage: Just prepare your `replacement.xlsx` in working directory.");
-        Console.WriteLine($"[INF] Command: {string.Join(" ", args.Select(a => a.Contains(' ') ? $"\"{a}\"" : a))}");
-        Console.WriteLine($"[INF] WorkingDirectory: {Environment.CurrentDirectory}");
-        Console.WriteLine($"[INF] Default mode is line replacement."); // TODO: Add regex replacement mode.
+        Console.WriteLine($"[INF] Welcome to Replacement Build {cmdwtf.BuildTimestamp.BuildTime:yyyy.MM.dd HH:mm:ss.fff}.");
+        Console.WriteLine($"[INF] Usage: Prepare a sheet in the `replacement.xlsx` file, with the first column as 'Before Replacement' and the second column as 'After Replacement'.");
+        Console.WriteLine($"[INF] Arguments: \"{string.Join(" ", args.Select(a => a.Contains(' ') ? $"\"{a}\"" : a))}\"");
+        Console.WriteLine($"[INF] WorkingDirectory: \"{Environment.CurrentDirectory}\"");
+        Console.WriteLine($"[INF] Tips: Regex replacement mode not supported nowaday.");
 
         if (!File.Exists("replacement.xlsx"))
         {
-            Console.Error.WriteLine("[ERR] replacement.xlsx not found.");
+            Console.Error.WriteLine("[WRN] File `replacement.xlsx` not found.");
+            Console.Error.WriteLine("[INF] Do you want to create `replacement.xlsx` now? (Y/N)");
             Environment.ExitCode = 1;
-            _ = Console.ReadKey();
+
+            ConsoleKeyInfo key = Console.ReadKey();
+
+            if (key.KeyChar == 'Y' || key.KeyChar == 'y')
+            {
+                Console.WriteLine();
+
+                MiniExcel.SaveAs(
+                    path: "replacement.xlsx",
+                    value: new[] { new { Column1 = default(string) } },
+                    printHeader: false,
+                    sheetName: "Sheet1",
+                    excelType: ExcelType.XLSX,
+                    configuration: new OpenXmlConfiguration() { FastMode = true, AutoFilter = false, TableStyles = TableStyles.None },
+                    overwriteFile: true
+                );
+                Console.WriteLine("[INF] File `replacement.xlsx` created.");
+                Console.Error.WriteLine("[INF] Press any key to continue . . .");
+                _ = Console.ReadKey();
+            }
+            else
+            {
+                Environment.ExitCode = 1;
+            }
             return;
         }
 
@@ -25,8 +50,10 @@ internal class Program
 
         if (sheetName == null)
         {
-            Console.Error.WriteLine("[ERR] replacement.xlsx file does not have any sheet.");
+            Console.Error.WriteLine("[ERR] File `replacement.xlsx` does not have any sheet.");
             Environment.ExitCode = 1;
+
+            Console.Error.WriteLine("[INF] Press any key to continue . . .");
             _ = Console.ReadKey();
             return;
         }
@@ -52,9 +79,19 @@ internal class Program
                     break;
                 }
             }
+
+            if (string.IsNullOrEmpty(firstColumn))
+            {
+                Console.WriteLine($"[WRN] Replacement detected from \"{firstColumn}\" to \"{secondColumn}\" will be skipped.");
+            }
+            else
+            {
+                Console.WriteLine($"[INF] Replacement detected from \"{firstColumn}\" to \"{secondColumn}\".");
+            }
+
             return (From: firstColumn, To: secondColumn);
         })
-        .Where(replacement => replacement.From is not null && replacement.To is not null)
+        .Where(replacement => !string.IsNullOrEmpty(replacement.From) && replacement.To is not null)
         .ToArray(); // ToArray is important to avoid multiple enumeration.
 
         foreach (string filePath in Directory.EnumerateFiles(".", "*", SearchOption.AllDirectories))
@@ -82,6 +119,34 @@ internal class Program
             }
         }
 
+        Console.Error.WriteLine("[INF] Finished.");
+        Console.Error.WriteLine("[INF] Press any key to continue . . .");
         _ = Console.ReadKey();
+    }
+}
+
+file static class TextDetector
+{
+    public static bool IsTextFile(string path)
+    {
+        // otherwise, read the first 16KB, check if we can get something.
+        using FileStream s = new(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        const int bufferLength = 16 * 1024;
+        var buffer = new byte[bufferLength];
+        var size = s.Read(buffer, 0, bufferLength);
+
+        return IsText(buffer, size);
+    }
+
+    private static bool IsText(IReadOnlyList<byte> buffer, int size)
+    {
+        for (var i = 1; i < size; i++)
+        {
+            if (buffer[i - 1] == 0 && buffer[i] == 0)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }

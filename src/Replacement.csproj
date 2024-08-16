@@ -28,6 +28,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>compile; runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="cmdwtf.BuildTimestampGenerator" Version="1.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
