@@ -2,10 +2,8 @@
 
 ## Usage
 
-Just prepare your `replacement.xlsx` in working directory.
+Prepare a sheet in the `replacement.xlsx` file, with the first column as 'Before Replacement' and the second column as 'After Replacement'.
 
 ## Mode
-
-Default mode is line replacement.
 
 Regex replacement mode is not supported.
