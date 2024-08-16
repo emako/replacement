@@ -18,7 +18,6 @@ internal class Program
         {
             Console.Error.WriteLine("[WRN] File `replacement.xlsx` not found.");
             Console.Error.WriteLine("[INF] Do you want to create `replacement.xlsx` now? (Y/N)");
-            Environment.ExitCode = 1;
 
             ConsoleKeyInfo key = Console.ReadKey();
 
@@ -36,13 +35,14 @@ internal class Program
                     overwriteFile: true
                 );
                 Console.WriteLine("[INF] File `replacement.xlsx` created.");
-                Console.Error.WriteLine("[INF] Press any key to continue . . .");
-                _ = Console.ReadKey();
             }
             else
             {
                 Environment.ExitCode = 1;
             }
+
+            Console.Error.WriteLine("[INF] Press any key to continue . . .");
+            _ = Console.ReadKey();
             return;
         }
 
