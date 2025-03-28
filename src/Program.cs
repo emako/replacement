@@ -1,5 +1,6 @@
 ﻿using MiniExcelLibs;
 using MiniExcelLibs.OpenXml;
+using System.Text.RegularExpressions;
 using UtfUnknown;
 
 namespace Replacement;
@@ -12,7 +13,6 @@ internal class Program
         Console.WriteLine($"[INF] Usage: Prepare a sheet in the `replacement.xlsx` file, with the first column as 'Before Replacement' and the second column as 'After Replacement'.");
         Console.WriteLine($"[INF] Arguments: \"{string.Join(" ", args.Select(a => a.Contains(' ') ? $"\"{a}\"" : a))}\"");
         Console.WriteLine($"[INF] WorkingDirectory: \"{Environment.CurrentDirectory}\"");
-        Console.WriteLine($"[INF] Tips: Regex replacement mode not supported nowaday.");
 
         if (!File.Exists("replacement.xlsx"))
         {
@@ -107,7 +107,7 @@ internal class Program
 
                     foreach (var (from, to) in replacements)
                     {
-                        text = text.Replace(from!, to!);
+                        text = Regex.Replace(text, from!, to!);
                     }
 
                     File.WriteAllText(filePath, text, result.Detected.Encoding);
